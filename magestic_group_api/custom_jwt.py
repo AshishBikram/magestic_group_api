@@ -10,5 +10,5 @@ def jwt_response_payload_handler(token, user=None, request=None):
     return {
         'token': token,
         'username': user.username,
-        'expiry_date': datetime.utcnow() + api_settings.JWT_EXPIRATION_DELTA,
+        'expiresAt': datetime.utcnow() + api_settings.JWT_EXPIRATION_DELTA,
     }
