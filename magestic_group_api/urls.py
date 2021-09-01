@@ -22,4 +22,5 @@ urlpatterns = [
     path('api/token/', jwt_views.obtain_jwt_token, name='token_obtain_pair'),
     path('api/token/refresh/', jwt_views.refresh_jwt_token, name='token_refresh'),
     path('api/', include('users.urls')),
+    path('api/', include('product_api.urls')),
 ]

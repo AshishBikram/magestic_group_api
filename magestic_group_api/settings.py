@@ -37,11 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'magestic.apps.MagesticConfig',
     'corsheaders',
     'users',
-    'rest_framework'
+    'rest_framework',
+    'product_api'
 ]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -82,7 +83,7 @@ WSGI_APPLICATION = 'magestic_group_api.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'majestic_db',
+        'NAME': 'majestic_db.db',
     }
 }
 
@@ -127,8 +128,10 @@ REST_FRAMEWORK = {
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 10
 }
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=60),
@@ -139,7 +142,12 @@ JWT_AUTH = {
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
