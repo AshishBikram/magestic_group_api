@@ -13,13 +13,13 @@ def user_directory_path(instance, filename):
 class Product(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     model = models.CharField(max_length=255, null=True, blank=True)
-    weight = models.CharField(max_length=255, null=True, blank=True)
+    weight = models.FloatField(max_length=255, null=True, blank=True)
     size = models.CharField(max_length=225, null=True, blank=True)
     categories = models.CharField(max_length=255, null=True, blank=True)
-    price = models.CharField(max_length=255, null=True, blank=True)
+    price = models.IntegerField(null=True)
     brand = models.CharField(max_length=255, null=True, blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)
-    year = models.CharField(max_length=100, null=True, blank=True)
+    year = models.IntegerField(null=True)
     sub_descriptions = jsonfield.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -33,3 +33,13 @@ class ProductImage(models.Model):
 
 class ProductCategory(models.Model):
     name = models.CharField(max_length=255, null=False, blank=False)
+    brand = models.CharField(max_length=255, null=False, blank=False)
+    nav_status = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class CustomizedProduct(models.Model):
+    best_sellers = jsonfield.JSONField(default=[])
+    new_products = jsonfield.JSONField(default=[])
+    sale_products = jsonfield.JSONField(default=[])
+    created_at = models.DateTimeField(auto_now_add=True)

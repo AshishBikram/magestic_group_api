@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import ProductCLView, ProductPGDView, ProductImageCLView, ProductImagePGDView, ProductCategoryCLView, \
-    ProductCategoryPGDView
+    ProductCategoryPGDView, CustomizedProductCLView
 
 urlpatterns = [
     path('product', ProductCLView.as_view()),
@@ -9,4 +9,5 @@ urlpatterns = [
     path('product-image/<str:pk>', ProductImagePGDView.as_view()),
     path('product-category', ProductCategoryCLView.as_view()),
     path('product-category/<int:pk>', ProductCategoryPGDView.as_view()),
+    path('custom-product', CustomizedProductCLView.as_view()),
 ]

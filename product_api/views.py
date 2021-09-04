@@ -1,8 +1,9 @@
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import ProductSerializer, ProductImageSerializer, ProductCategorySerializer
-from .models import Product, ProductImage, ProductCategory
+from .serializers import ProductSerializer, ProductImageSerializer, ProductCategorySerializer,\
+    CustomizedProductSerializer
+from .models import Product, ProductImage, ProductCategory, CustomizedProduct
 from django.conf import settings as api_settings
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import status
@@ -10,11 +11,26 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from django.http import Http404
 
 
+def get_formatted_data(data_type, value):
+    if data_type == "FloatField":
+        return float(value)
+    elif data_type == "IntegerField":
+        return int(value)
+    elif data_type == "BooleanField":
+        return bool(value)
+    else:
+        return value
+
+
+def get_search_filter(fields, request):
+    return {field: get_formatted_data(fields[field], request.GET[field]) for field in fields if request.GET.get(field)}
+
+
 # Create your views here.
 class ProductCLView(APIView):
     permission_classes = (IsAdminUser,)
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    fields = {field.name: field.get_internal_type() for field in Product._meta.get_fields()}
 
     def post(self, request):
         serializer = ProductSerializer(data=request.data)
@@ -24,7 +40,11 @@ class ProductCLView(APIView):
 
     def get(self, request):
         paginator = LimitOffsetPagination()
-        page = paginator.paginate_queryset(self.queryset, request)
+        search = {}
+        search.update(get_search_filter(self.fields, request))
+        if request.GET.get("low_price"):
+            search["price__range"] = (request.GET.get("low_price"), request.GET.get("high_price", 99999999999))
+        page = paginator.paginate_queryset(Product.objects.filter(**search), request)
         serializer = self.serializer_class(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
@@ -109,8 +129,8 @@ class ProductImagePGDView(APIView):
 
 class ProductCategoryCLView(APIView):
     permission_classes = (IsAdminUser,)
-    queryset = ProductCategory.objects.all()
     serializer_class = ProductCategorySerializer
+    fields = {field.name: field.get_internal_type() for field in ProductCategory._meta.get_fields()}
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -119,10 +139,15 @@ class ProductCategoryCLView(APIView):
         return Response(serializer.data)
 
     def get(self, request):
-        paginator = LimitOffsetPagination()
-        page = paginator.paginate_queryset(self.queryset, request)
-        serializer = self.serializer_class(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        if request.GET.get("request_type") != "All":
+            paginator = LimitOffsetPagination()
+            search = get_search_filter(self.fields, request)
+            page = paginator.paginate_queryset(ProductCategory.objects.filter(**search), request)
+            serializer = self.serializer_class(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        else:
+            serializer = self.serializer_class(ProductCategory.objects.all(), many=True)
+            return Response(serializer.data)
 
 
 class ProductCategoryPGDView(APIView):
@@ -152,3 +177,22 @@ class ProductCategoryPGDView(APIView):
         product_category = self.get_object(pk)
         product_category.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CustomizedProductCLView(APIView):
+    permission_classes = (IsAdminUser,)
+    serializer_class = CustomizedProductSerializer
+
+    def post(self, request):
+        obj = CustomizedProduct.objects.all().first()
+        if obj:
+            serializer = self.serializer_class(obj, data=request.data)
+        else:
+            serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def get(self, request):
+        serializer = self.serializer_class(CustomizedProduct.objects.all().first())
+        return Response(serializer.data)
