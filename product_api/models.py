@@ -27,7 +27,7 @@ class Product(models.Model):
 class ProductImage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     photo = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, related_name='product_images')
     created_at = models.DateTimeField(auto_now_add=True)
 
 
