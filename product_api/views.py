@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import ProductSerializer, ProductImageSerializer, ProductCategorySerializer,\
@@ -28,7 +28,7 @@ def get_search_filter(fields, request):
 
 # Create your views here.
 class ProductCLView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = ProductSerializer
     fields = {field.name: field.get_internal_type() for field in Product._meta.get_fields()}
 
@@ -50,7 +50,7 @@ class ProductCLView(APIView):
 
 
 class ProductPGDView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = ProductSerializer
 
     def get_object(self, pk):
@@ -79,7 +79,7 @@ class ProductPGDView(APIView):
 
 
 class ProductImageCLView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
     parser_classes = [MultiPartParser, FormParser]
@@ -98,7 +98,7 @@ class ProductImageCLView(APIView):
 
 
 class ProductImagePGDView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = ProductImageSerializer
     parser_classes = [MultiPartParser, FormParser]
 
@@ -128,7 +128,7 @@ class ProductImagePGDView(APIView):
 
 
 class ProductCategoryCLView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = ProductCategorySerializer
     fields = {field.name: field.get_internal_type() for field in ProductCategory._meta.get_fields()}
 
@@ -151,7 +151,7 @@ class ProductCategoryCLView(APIView):
 
 
 class ProductCategoryPGDView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = ProductCategorySerializer
 
     def get_object(self, pk):
@@ -180,7 +180,7 @@ class ProductCategoryPGDView(APIView):
 
 
 class CustomizedProductCLView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = CustomizedProductSerializer
 
     def post(self, request):
@@ -194,5 +194,12 @@ class CustomizedProductCLView(APIView):
         return Response(serializer.data)
 
     def get(self, request):
-        serializer = self.serializer_class(CustomizedProduct.objects.all().first())
-        return Response(serializer.data)
+        obj = CustomizedProduct.objects.all().first()
+        best_sellers_list = Product.objects.filter(pk__in=obj.best_sellers)
+        new_products_list = Product.objects.filter(pk__in=obj.new_products)
+        sale_products_list = Product.objects.filter(pk__in=obj.sale_products)
+        data = self.serializer_class(obj).data
+        data['best_sellers_list'] = ProductSerializer(best_sellers_list, many=True).data
+        data['new_products_list'] = ProductSerializer(new_products_list, many=True).data
+        data['sale_products_list'] = ProductSerializer(sale_products_list, many=True).data
+        return Response(data)
