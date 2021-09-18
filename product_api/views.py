@@ -1,9 +1,9 @@
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import ProductSerializer, ProductImageSerializer, ProductCategorySerializer,\
     CustomizedProductSerializer
-from .models import Product, ProductImage, ProductCategory, CustomizedProduct
+from .models import Product, ProductImage, ProductCategory, CustomizedProduct, ContactUs
 from django.conf import settings as api_settings
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import status
@@ -203,3 +203,49 @@ class CustomizedProductCLView(APIView):
         data['new_products_list'] = ProductSerializer(new_products_list, many=True).data
         data['sale_products_list'] = ProductSerializer(sale_products_list, many=True).data
         return Response(data)
+
+
+class ContactUSCLView(APIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ContactUsSerializer
+
+    def post(self, request):
+        if request.user.is_authenticated:
+            return Response({"success": False, "message": 'un-authenticated'})
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def get(self, request):
+        serializer = self.serializer_class(ContactUs.objects.all(), many=True)
+        return Response(serializer.data)
+
+
+class ContactUSPGDView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ContactUsSerializer
+
+    def get_object(self, pk):
+        try:
+            return ContactUs.objects.get(pk=pk)
+        except ContactUs.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        contact_us = self.get_object(pk)
+        serializer = self.serializer_class(contact_us)
+        return Response(serializer.data)
+
+    def put(self, request, pk, format=None):
+        contact_us = self.get_object(pk)
+        serializer = self.serializer_class(contact_us, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        contact_us = self.get_object(pk)
+        contact_us.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

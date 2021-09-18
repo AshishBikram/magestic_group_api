@@ -43,3 +43,12 @@ class CustomizedProduct(models.Model):
     new_products = jsonfield.JSONField(default=[])
     sale_products = jsonfield.JSONField(default=[])
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ContactUs(models.Model):
+    first_name = models.CharField(max_length=100, null=False, blank=False)
+    last_name = models.CharField(max_length=100, null=False, blank=False)
+    mobile_no = models.CharField(max_length=15, null=False, blank=False)
+    email = models.EmailField(max_length=50, null=False, blank=False)
+    subject = models.CharField(max_length=250, null=False, blank=False)
+    message = models.TextField(null=False, blank=False)
